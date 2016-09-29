@@ -152,6 +152,13 @@ func TestPolicyEquivalence(t *testing.T) {
 			policy2:    policyTest19b,
 			equivalent: false,
 		},
+
+		{
+			name:       "Casing of Effect",
+			policy1:    policyTest20a,
+			policy2:    policyTest20b,
+			equivalent: true,
+		},
 	}
 
 	for _, tc := range cases {
@@ -730,7 +737,7 @@ const policyTest17b = `{
  ]
 }`
 
-const policyTest18a =`{
+const policyTest18a = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -762,7 +769,7 @@ const policyTest18a =`{
   ]
 }`
 
-const policyTest18b =`{
+const policyTest18b = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -794,7 +801,7 @@ const policyTest18b =`{
   ]
 }`
 
-const policyTest19a =`{
+const policyTest19a = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -826,7 +833,7 @@ const policyTest19a =`{
   ]
 }`
 
-const policyTest19b =`{
+const policyTest19b = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -844,6 +851,34 @@ const policyTest19b =`{
         "arn:aws:s3:::BUCKET-NAME/home/${aws:username}",
         "arn:aws:s3:::BUCKET-NAME/home/${aws:username}/*"
       ]
+    }
+  ]
+}`
+
+const policyTest20a = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "spotfleet.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}`
+
+const policyTest20b = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Action": ["sts:AssumeRole"],
+      "Effect": "allow",
+      "Principal": {
+        "Service": "spotfleet.amazonaws.com"
+      }
     }
   ]
 }`
