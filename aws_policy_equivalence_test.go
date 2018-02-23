@@ -162,13 +162,42 @@ func TestPolicyEquivalence(t *testing.T) {
 			policy1:    policyTest20a,
 			policy2:    policyTest20b,
 			equivalent: true,
-		},
+    },
+    
 		{
 			name:       "Single Statement vs []Statement",
 			policy1:    policyTest21a,
 			policy2:    policyTest21b,
 			equivalent: true,
-		},
+    },
+    
+    {
+			name:       "Empty Principal set",
+			policy1:    policyTest22a,
+			policy2:    policyTest22b,
+			equivalent: true,
+    },
+
+    {
+			name:       "Empty Principals sets of different types have the same effect",
+			policy1:    policyTest23a,
+			policy2:    policyTest23b,
+			equivalent: true,
+    },
+
+    {
+			name:       "Empty Principal and missing Principal have the same effect",
+			policy1:    policyTest24a,
+			policy2:    policyTest24b,
+			equivalent: true,
+    },
+
+    {
+			name:       "Principal with empty sets and missing Principal have the same effect",
+			policy1:    policyTest25a,
+			policy2:    policyTest25b,
+			equivalent: true,
+    },
 	}
 
 	for _, tc := range cases {
@@ -916,6 +945,105 @@ const policyTest21b = `{
       "Principal": {
         "Service": "spotfleet.amazonaws.com"
       }
+    }
+  ]
+}`
+
+const policyTest22a = `{
+  "Version": "2012-10-17",
+  "Statement":
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {},
+      "Action": "sts:AssumeRole"
+    }
+}`
+
+const policyTest22b = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Action": ["sts:AssumeRole"],
+      "Effect": "allow",
+      "Principal": {
+        "Service": []
+      }
+    }
+  ]
+}`
+
+const policyTest23a = `{
+  "Version": "2012-10-17",
+  "Statement":
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": []
+      },
+      "Action": "sts:AssumeRole"
+    }
+}`
+
+const policyTest23b = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Action": ["sts:AssumeRole"],
+      "Effect": "allow",
+      "Principal": {
+        "AWS": []
+      }
+    }
+  ]
+}`
+
+const policyTest24a = `{
+  "Version": "2012-10-17",
+  "Statement":
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {},
+      "Action": "sts:AssumeRole"
+    }
+}`
+
+const policyTest24b = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Action": ["sts:AssumeRole"],
+      "Effect": "allow"
+    }
+  ]
+}`
+
+const policyTest25a = `{
+  "Version": "2012-10-17",
+  "Statement":
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [],
+        "AWS": []
+      },
+      "Action": "sts:AssumeRole"
+    }
+}`
+
+const policyTest25b = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Action": ["sts:AssumeRole"],
+      "Effect": "allow"
     }
   ]
 }`

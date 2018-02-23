@@ -209,24 +209,27 @@ func (statement *awsPolicyStatement) equals(other *awsPolicyStatement) bool {
 }
 
 func mapPrincipalsEqual(ours, theirs interface{}) bool {
-	ourPrincipalMap, ok := ours.(map[string]interface{})
-	if !ok {
-		return false
-	}
-
-	theirPrincipalMap, ok := theirs.(map[string]interface{})
-	if !ok {
-		return false
-	}
+	ourPrincipalMap, oursOk := ours.(map[string]interface{})
+	theirPrincipalMap, theirsOk := theirs.(map[string]interface{})
 
 	oursNormalized := make(map[string]awsStringSet)
-	for key, val := range ourPrincipalMap {
-		oursNormalized[key] = newAWSStringSet(val)
+	if oursOk {
+		for key, val := range ourPrincipalMap {
+			var tmp = newAWSStringSet(val)
+			if len(tmp) > 0 {
+				oursNormalized[key] = tmp
+			}
+		}
 	}
 
 	theirsNormalized := make(map[string]awsStringSet)
-	for key, val := range theirPrincipalMap {
-		theirsNormalized[key] = newAWSStringSet(val)
+	if theirsOk {
+		for key, val := range theirPrincipalMap {
+			var tmp = newAWSStringSet(val)
+			if len(tmp) > 0 {
+				theirsNormalized[key] = newAWSStringSet(val)
+			}
+		}
 	}
 
 	for key, ours := range oursNormalized {
@@ -353,6 +356,9 @@ func newAWSStringSet(members interface{}) awsStringSet {
 	}
 
 	if multiple, ok := members.([]interface{}); ok {
+		if len(multiple) == 0 {
+			return awsStringSet{}
+		}
 		actions := make([]string, len(multiple))
 		for i, action := range multiple {
 			actions[i] = action.(string)
