@@ -10,8 +10,10 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"regexp"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/errwrap"
 	"github.com/mitchellh/mapstructure"
 )
@@ -212,22 +214,22 @@ func mapPrincipalsEqual(ours, theirs interface{}) bool {
 	ourPrincipalMap, oursOk := ours.(map[string]interface{})
 	theirPrincipalMap, theirsOk := theirs.(map[string]interface{})
 
-	oursNormalized := make(map[string]awsStringSet)
+	oursNormalized := make(map[string]awsPrincipalStringSet)
 	if oursOk {
 		for key, val := range ourPrincipalMap {
-			var tmp = newAWSStringSet(val)
+			var tmp = newAWSPrincipalStringSet(val)
 			if len(tmp) > 0 {
 				oursNormalized[key] = tmp
 			}
 		}
 	}
 
-	theirsNormalized := make(map[string]awsStringSet)
+	theirsNormalized := make(map[string]awsPrincipalStringSet)
 	if theirsOk {
 		for key, val := range theirPrincipalMap {
-			var tmp = newAWSStringSet(val)
+			var tmp = newAWSPrincipalStringSet(val)
 			if len(tmp) > 0 {
-				theirsNormalized[key] = newAWSStringSet(val)
+				theirsNormalized[key] = newAWSPrincipalStringSet(val)
 			}
 		}
 	}
@@ -267,6 +269,26 @@ func stringPrincipalsEqual(ours, theirs interface{}) bool {
 
 	if ourPrincipal == theirPrincipal {
 		return true
+	}
+
+	// Handle AWS converting account ID principal to root IAM user ARN
+	// ACCOUNTID == arn:PARTITION:iam::ACCOUNTID:root
+	awsAccountIDRegex := regexp.MustCompile(`^[0-9]{12}$`)
+
+	if awsAccountIDRegex.MatchString(ourPrincipal) {
+		if theirArn, err := arn.Parse(theirPrincipal); err == nil {
+			if theirArn.Service == "iam" && theirArn.Resource == "root" && theirArn.AccountID == ourPrincipal {
+				return true
+			}
+		}
+	}
+
+	if awsAccountIDRegex.MatchString(theirPrincipal) {
+		if ourArn, err := arn.Parse(ourPrincipal); err == nil {
+			if ourArn.Service == "iam" && ourArn.Resource == "root" && ourArn.AccountID == theirPrincipal {
+				return true
+			}
+		}
 	}
 
 	return false
@@ -341,6 +363,7 @@ func (conditions awsConditionsBlock) Equals(other awsConditionsBlock) bool {
 }
 
 type awsStringSet []string
+type awsPrincipalStringSet awsStringSet
 
 // newAWSStringSet constructs an awsStringSet from an interface{} - which
 // may be nil, a single string, or []interface{} (each of which is a string).
@@ -369,6 +392,10 @@ func newAWSStringSet(members interface{}) awsStringSet {
 	return nil
 }
 
+func newAWSPrincipalStringSet(members interface{}) awsPrincipalStringSet {
+	return awsPrincipalStringSet(newAWSStringSet(members))
+}
+
 func (actions awsStringSet) equals(other awsStringSet) bool {
 	if len(actions) != len(other) {
 		return false
@@ -386,4 +413,25 @@ func (actions awsStringSet) equals(other awsStringSet) bool {
 	}
 
 	return reflect.DeepEqual(ourMap, theirMap)
+}
+
+func (ours awsPrincipalStringSet) equals(theirs awsPrincipalStringSet) bool {
+	if len(ours) != len(theirs) {
+		return false
+	}
+
+	for _, ourPrincipal := range ours {
+		matches := false
+		for _, theirPrincipal := range theirs {
+			if stringPrincipalsEqual(ourPrincipal, theirPrincipal) {
+				matches = true
+				break
+			}
+		}
+		if !matches {
+			return false
+		}
+	}
+
+	return true
 }

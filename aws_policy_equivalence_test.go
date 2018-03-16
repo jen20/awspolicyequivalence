@@ -162,42 +162,67 @@ func TestPolicyEquivalence(t *testing.T) {
 			policy1:    policyTest20a,
 			policy2:    policyTest20b,
 			equivalent: true,
-    },
-    
+		},
+
 		{
 			name:       "Single Statement vs []Statement",
 			policy1:    policyTest21a,
 			policy2:    policyTest21b,
 			equivalent: true,
-    },
-    
-    {
+		},
+
+		{
 			name:       "Empty Principal set",
 			policy1:    policyTest22a,
 			policy2:    policyTest22b,
 			equivalent: true,
-    },
+		},
 
-    {
+		{
 			name:       "Empty Principals sets of different types have the same effect",
 			policy1:    policyTest23a,
 			policy2:    policyTest23b,
 			equivalent: true,
-    },
+		},
 
-    {
+		{
 			name:       "Empty Principal and missing Principal have the same effect",
 			policy1:    policyTest24a,
 			policy2:    policyTest24b,
 			equivalent: true,
-    },
+		},
 
-    {
+		{
 			name:       "Principal with empty sets and missing Principal have the same effect",
 			policy1:    policyTest25a,
 			policy2:    policyTest25b,
 			equivalent: true,
-    },
+		},
+
+		{
+			name:       "Principal with string root IAM user matches account ID",
+			policy1:    policyTest26a,
+			policy2:    policyTest26b,
+			equivalent: true,
+		},
+		{
+			name:       "Principal with map string root IAM user matches account ID",
+			policy1:    policyTest27a,
+			policy2:    policyTest27b,
+			equivalent: true,
+		},
+		{
+			name:       "Principal with map array single root IAM user matches account ID",
+			policy1:    policyTest28a,
+			policy2:    policyTest28b,
+			equivalent: true,
+		},
+		{
+			name:       "Principal with map array multiple root IAM user matches account ID",
+			policy1:    policyTest29a,
+			policy2:    policyTest29b,
+			equivalent: true,
+		},
 	}
 
 	for _, tc := range cases {
@@ -1044,6 +1069,132 @@ const policyTest25b = `{
       "Sid": "",
       "Action": ["sts:AssumeRole"],
       "Effect": "allow"
+    }
+  ]
+}`
+
+const policyTest26a = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Principal": "123456789012"
+    }
+  ]
+}`
+
+const policyTest26b = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Principal": "arn:PARTITION:iam::123456789012:root"
+    }
+  ]
+}`
+
+const policyTest27a = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Principal": {
+        "AWS": "123456789012"
+      }
+    }
+  ]
+}`
+
+const policyTest27b = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Principal": {
+        "AWS": "arn:PARTITION:iam::123456789012:root"
+      }
+    }
+  ]
+}`
+
+const policyTest28a = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Principal": {
+        "AWS": [
+          "123456789012"
+        ]
+      }
+    }
+  ]
+}`
+
+const policyTest28b = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Principal": {
+        "AWS": [
+          "arn:PARTITION:iam::123456789012:root"
+        ]
+      }
+    }
+  ]
+}`
+
+const policyTest29a = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Principal": {
+        "AWS": [
+          "123456789012",
+          "arn:PARTITION:iam::999999999999:root"
+        ]
+      }
+    }
+  ]
+}`
+
+const policyTest29b = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Principal": {
+        "AWS": [
+          "arn:PARTITION:iam::123456789012:root",
+          "arn:PARTITION:iam::999999999999:root"
+        ]
+      }
     }
   ]
 }`
