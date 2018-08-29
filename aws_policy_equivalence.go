@@ -9,12 +9,12 @@ package awspolicy
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/hashicorp/errwrap"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -31,21 +31,21 @@ import (
 func PoliciesAreEquivalent(policy1, policy2 string) (bool, error) {
 	policy1intermediate := &intermediateAwsPolicyDocument{}
 	if err := json.Unmarshal([]byte(policy1), policy1intermediate); err != nil {
-		return false, errwrap.Wrapf("Error unmarshaling policy: {{err}}", err)
+		return false, fmt.Errorf("Error unmarshaling policy: %s", err)
 	}
 
 	policy2intermediate := &intermediateAwsPolicyDocument{}
 	if err := json.Unmarshal([]byte(policy2), policy2intermediate); err != nil {
-		return false, errwrap.Wrapf("Error unmarshaling policy: {{err}}", err)
+		return false, fmt.Errorf("Error unmarshaling policy: %s", err)
 	}
 
 	policy1Doc, err := policy1intermediate.document()
 	if err != nil {
-		return false, errwrap.Wrapf("Error parsing policy: {{err}}", err)
+		return false, fmt.Errorf("Error parsing policy: %s", err)
 	}
 	policy2Doc, err := policy2intermediate.document()
 	if err != nil {
-		return false, errwrap.Wrapf("Error parsing policy: {{err}}", err)
+		return false, fmt.Errorf("Error parsing policy: %s", err)
 	}
 
 	return policy1Doc.equals(policy2Doc), nil
@@ -63,12 +63,12 @@ func (intermediate *intermediateAwsPolicyDocument) document() (*awsPolicyDocumen
 	switch s := intermediate.Statements.(type) {
 	case []interface{}:
 		if err := mapstructure.Decode(s, &statements); err != nil {
-			return nil, errwrap.Wrapf("Error parsing statement: {{err}}", err)
+			return nil, fmt.Errorf("Error parsing statement: %s", err)
 		}
 	case map[string]interface{}:
 		var singleStatement *awsPolicyStatement
 		if err := mapstructure.Decode(s, &singleStatement); err != nil {
-			return nil, errwrap.Wrapf("Error parsing statement: {{err}}", err)
+			return nil, fmt.Errorf("Error parsing statement: %s", err)
 		}
 		statements = append(statements, singleStatement)
 	default:
