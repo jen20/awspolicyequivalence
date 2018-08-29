@@ -8,6 +8,55 @@ import (
 	"testing"
 )
 
+func TestParseAwsArnString(t *testing.T) {
+	cases := []struct {
+		input string
+		arn   awsArn
+		err   bool
+	}{
+		{
+			input: "invalid:prefix",
+			err:   true,
+		},
+		{
+			input: "arn:missing:sections",
+			err:   true,
+		},
+		{
+			input: "arn:aws:ec2:us-west-2:123456789012:instance/i-01234567",
+			arn: awsArn{
+				partition: "aws",
+				service:   "ec2",
+				region:    "us-west-2",
+				account:   "123456789012",
+				resource:  "instance/i-01234567",
+			},
+		},
+		{
+			input: "arn:aws:iam::123456789012:root",
+			arn: awsArn{
+				partition: "aws",
+				service:   "iam",
+				region:    "",
+				account:   "123456789012",
+				resource:  "root",
+			},
+		},
+	}
+	for _, tc := range cases {
+		arn, err := parseAwsArnString(tc.input)
+		if !tc.err && err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
+		if tc.err && err == nil {
+			t.Fatal("Expected error, none produced")
+		}
+		if tc.arn != arn {
+			t.Errorf("Expected %q to parse as %v, but got %v", tc.input, tc.arn, arn)
+		}
+	}
+}
+
 func TestPolicyEquivalence(t *testing.T) {
 	cases := []struct {
 		name       string
