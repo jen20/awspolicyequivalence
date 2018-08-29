@@ -14,7 +14,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -276,16 +275,16 @@ func stringPrincipalsEqual(ours, theirs interface{}) bool {
 	awsAccountIDRegex := regexp.MustCompile(`^[0-9]{12}$`)
 
 	if awsAccountIDRegex.MatchString(ourPrincipal) {
-		if theirArn, err := arn.Parse(theirPrincipal); err == nil {
-			if theirArn.Service == "iam" && theirArn.Resource == "root" && theirArn.AccountID == ourPrincipal {
+		if theirArn, err := parseAwsArnString(theirPrincipal); err == nil {
+			if theirArn.service == "iam" && theirArn.resource == "root" && theirArn.account == ourPrincipal {
 				return true
 			}
 		}
 	}
 
 	if awsAccountIDRegex.MatchString(theirPrincipal) {
-		if ourArn, err := arn.Parse(ourPrincipal); err == nil {
-			if ourArn.Service == "iam" && ourArn.Resource == "root" && ourArn.AccountID == theirPrincipal {
+		if ourArn, err := parseAwsArnString(ourPrincipal); err == nil {
+			if ourArn.service == "iam" && ourArn.resource == "root" && ourArn.account == theirPrincipal {
 				return true
 			}
 		}
@@ -434,4 +433,33 @@ func (ours awsPrincipalStringSet) equals(theirs awsPrincipalStringSet) bool {
 	}
 
 	return true
+}
+
+// awsArn describes an Amazon Resource Name
+// More information: http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+type awsArn struct {
+	account   string
+	partition string
+	region    string
+	resource  string
+	service   string
+}
+
+// parseAwsArnString converts a string into an awsArn
+// Expects string in form of: arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE
+func parseAwsArnString(arn string) (awsArn, error) {
+	if !strings.HasPrefix(arn, "arn:") {
+		return awsArn{}, fmt.Errorf("expected arn: prefix, received: %s", arn)
+	}
+	arnParts := strings.SplitN(arn, ":", 6)
+	if len(arnParts) != 6 {
+		return awsArn{}, fmt.Errorf("expected 6 colon delimited sections, received: %s", arn)
+	}
+	return awsArn{
+		account:   arnParts[4],
+		partition: arnParts[1],
+		region:    arnParts[3],
+		resource:  arnParts[5],
+		service:   arnParts[2],
+	}, nil
 }
