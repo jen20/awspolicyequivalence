@@ -272,6 +272,32 @@ func TestPolicyEquivalence(t *testing.T) {
 			policy2:    policyTest29b,
 			equivalent: true,
 		},
+		{
+			name:       "Missing Statement",
+			policy1:    policyTest30,
+			policy2:    policyTest30,
+			equivalent: false,
+			err:        true,
+		},
+		{
+			name:       "Incorrect Statement type",
+			policy1:    policyTest31,
+			policy2:    policyTest31,
+			equivalent: false,
+			err:        true,
+		},
+		{
+			name:       "Incorrect single Resource type",
+			policy1:    policyTest32,
+			policy2:    policyTest32,
+			equivalent: false,
+		},
+		{
+			name:       "Incorrect multiple Resource type",
+			policy1:    policyTest33,
+			policy2:    policyTest33,
+			equivalent: false,
+		},
 	}
 
 	for _, tc := range cases {
@@ -1244,6 +1270,43 @@ const policyTest29b = `{
           "arn:PARTITION:iam::999999999999:root"
         ]
       }
+    }
+  ]
+}`
+
+const policyTest30 = `{
+  "Version": "2012-10-17"
+}`
+
+const policyTest31 = `{
+  "Version": "2012-10-17",
+  "Statement": 42
+}`
+
+const policyTest32 = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "statement1",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject"
+      ],
+      "Resource": 42
+    }
+  ]
+}`
+
+const policyTest33 = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "statement1",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject"
+      ],
+      "Resource": [42]
     }
   ]
 }`
