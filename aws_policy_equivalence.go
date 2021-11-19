@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -377,17 +378,30 @@ func newAWSStringSet(members interface{}) awsStringSet {
 		return awsStringSet{single}
 	}
 
+	if single, ok := members.(bool); ok {
+		return awsStringSet{strconv.FormatBool(single)}
+	}
+
+	if single, ok := members.(float64); ok {
+		return awsStringSet{strconv.FormatFloat(single, 'f', -1, 64)}
+	}
+
 	if multiple, ok := members.([]interface{}); ok {
 		if len(multiple) == 0 {
 			return awsStringSet{}
 		}
-		actions := make([]string, len(multiple))
-		for i, action := range multiple {
-			if _, ok := action.(string); !ok {
+		var actions []string
+		for _, action := range multiple {
+			switch action := action.(type) {
+			case string:
+				actions = append(actions, action)
+			case bool:
+				actions = append(actions, strconv.FormatBool(action))
+			case float64:
+				actions = append(actions, strconv.FormatFloat(action, 'f', -1, 64))
+			default:
 				return nil
 			}
-
-			actions[i] = action.(string)
 		}
 		return awsStringSet(actions)
 	}
